@@ -94,4 +94,4 @@ The project follows a modular structure for easy maintenance:
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
-<p align="center">Made with ❤️ for the community</p>
+<p align="center">powered by medellin17</p>
