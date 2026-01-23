@@ -24,14 +24,6 @@ venv/
 .env
 cookies*.txt
 
-# Documentation & Internal Tasks (as requested)
-requirements.md
-implementation_plan.md
-task.md
-variants.md
-debug_*.py
-test.mp4
-
 # OS
 .DS_Store
 Thumbs.db
