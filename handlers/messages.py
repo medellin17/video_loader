@@ -11,8 +11,6 @@ router = Router()
 async def handle_message(message: types.Message):
     text = message.text
     if not is_supported_url(text):
-        # Optionally ignore non-link messages or reply with hint
-        # For now, if it's a private chat, we can reply.
         if message.chat.type == 'private':
             await message.reply("⚠️ Ссылка не найдена или не поддерживается.\nПришлите ссылку на YouTube, Instagram или TikTok.")
         return
