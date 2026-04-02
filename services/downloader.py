@@ -20,18 +20,15 @@ async def download_video(url: str) -> dict:
         'quiet': True,
         'no_warnings': True,
         'http_headers': {
-             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        }
+             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        },
+        'socket_timeout': 30,
+        'extract_flat': False,
+        'ignoreerrors': False,
     }
 
     # Platform-specific overrides
     cookie_file = None
-    
-    ydl_opts.update({
-        'format': 'best',
-        'external_downloader': None, # Ensure we don't use aria2c here
-        'socket_timeout': 30,
-    })
     
     if "youtube.com" in url or "youtu.be" in url:
         cookie_file = COOKIES_YT_PATH
@@ -40,16 +37,37 @@ async def download_video(url: str) -> dict:
             'merge_output_format': 'mp4',
             'external_downloader': 'aria2c',
             'external_downloader_args': ['-x16', '-k1M'],
-            'extractor_args': {'youtube': {'player_client': ['android', 'web']}}
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'ios', 'web'],
+                    'player_skip': ['webpage']
+                }
+            },
+            'retries': 3,
         })
     elif "instagram.com" in url:
         cookie_file = COOKIES_INST_PATH
+        ydl_opts.update({
+            'format': 'best',
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Referer': 'https://www.instagram.com/',
+            },
+        })
     elif "tiktok.com" in url:
-        pass
+        ydl_opts.update({
+            'format': 'best',
+        })
         
     # Apply cookie file if exists
     if cookie_file and Path(cookie_file).exists():
         ydl_opts['cookiefile'] = cookie_file
+        logging.info(f"Using cookie file: {cookie_file}")
+    else:
+        if cookie_file:
+            logging.warning(f"Cookie file not found: {cookie_file}, attempting without cookies")
 
     # Run blocking yt-dlp code in a separate thread
     loop = asyncio.get_event_loop()
