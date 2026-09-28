@@ -13,6 +13,7 @@ A high-performance Telegram bot for downloading media from **YouTube (Shorts)**,
 - 🔴 **YouTube**: Full videos and Shorts up to 4K (via FFmpeg merge), using a 16-connection `aria2c`.
 - 🟣 **Instagram**: Reels and videos via session cookies, plus **photo carousels** sent as a Telegram album.
 - ⚫ **TikTok**: Watermark-free downloads with browser TLS impersonation.
+- 🩺 **Health monitoring**: Cookie sessions are probed on a timer; the admin is alerted the moment a session dies, instead of finding out from user complaints.
 - 🧹 **Self-cleaning**: Every download goes into its own temp directory, so partial `.part` files can never pile up.
 - 🇷🇺 **Readable errors**: Users get short Russian messages instead of raw yt-dlp tracebacks; full details go to the log.
 - 👤 **Clean UX**: Clear captions with author metadata.
@@ -59,6 +60,10 @@ Create a `.env` file in the root directory:
 BOT_TOKEN=your_telegram_bot_token
 COOKIES_YT_PATH=cookies_yt.txt
 COOKIES_INST_PATH=cookies_inst.txt
+# Where health alerts go; get the value from the bot's /id command
+ADMIN_CHAT_ID=
+# How often cookies are probed, hours
+HEALTH_CHECK_INTERVAL_HOURS=6
 ```
 > [!IMPORTANT]
 > Instagram requires cookies from a logged-in session. Export them in **Netscape** format
@@ -66,6 +71,9 @@ COOKIES_INST_PATH=cookies_inst.txt
 > `sessionid`, `ds_user_id` and `csrftoken`. See `walkthrough.md` for the full recipe.
 >
 > Cookie files contain a live account session: keep them at `chmod 600`.
+>
+> Set `ADMIN_CHAT_ID` or the health monitor has nowhere to send alerts. You can
+> always run `/status` in the bot to check on demand.
 
 ### 3. Running as a Daemon
 ```bash
@@ -98,6 +106,8 @@ The project follows a modular structure:
 - `handlers/`: Command, message and inline-query logic. `messages.py` orchestrates a request: try yt-dlp for video, and fall back to a gallery-dl carousel when a post has no video stream.
 - `services/downloader.py`: Video download via yt-dlp, with per-platform options and guaranteed temp cleanup.
 - `services/carousel.py`: Instagram photo posts via gallery-dl, WebP → JPEG conversion, size-capped.
+- `services/health.py`: Cookie liveness checks — a live Instagram session returns `200`, a dead one `302`.
+- `services/monitor.py`: Background poller that alerts the admin only on a state *change*, so a dead session produces one message instead of four a day.
 - `utils/errors.py`: Maps raw yt-dlp errors to short Russian messages for chat.
 - `utils/validators.py`: URL detection and extraction.
 - `tools/cookie_upload.py`: One-shot, token-protected uploader for refreshing Instagram cookies without scp.
@@ -110,6 +120,22 @@ The project follows a modular structure:
 4. The bot sends an album (max 10 items) and deletes the temp directory.
 
 If the carousel also fails, the user gets the plain yt-dlp error message — no crash.
+
+### Why health monitoring exists
+Expired cookies are silent: every Instagram download starts hitting the login
+wall and nothing surfaces until users complain. The monitor probes the session
+and alerts on transition. Note that checking cookie *expiry* on disk is not
+enough — a session revoked before its expiry looks perfectly valid, and only
+the live probe catches that.
+
+---
+
+## 📈 Scaling
+
+Only Instagram needs accounts. TikTok and YouTube work with no session at
+all — verified, not assumed. See [SCALING.md](SCALING.md) for the measured
+numbers, the account/IP cost model, and where the real ceiling is (it is not
+CPU, and it is not automatable).
 
 ---
 
