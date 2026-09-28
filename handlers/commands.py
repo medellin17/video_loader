@@ -1,5 +1,10 @@
+import logging
+
 from aiogram import Router, types
 from aiogram.filters import Command
+
+from config import ADMIN_CHAT_ID
+from services import health
 
 router = Router()
 
@@ -22,6 +27,28 @@ async def cmd_help(message: types.Message):
         "Если видео слишком большое (>50МБ), я предупрежу об этом.\n\n"
         "Поддерживаемые форматы ссылок:\n"
         "- youtube.com/..., youtu.be/...\n"
-        "- instagram.com/reel/...\n"
+        "- instagram.com/reel/..., instagram.com/p/...\n"
         "- tiktok.com/..., vm.tiktok.com/..."
     )
+
+
+@router.message(Command("id"))
+async def cmd_id(message: types.Message):
+    """Show the chat id needed for ADMIN_CHAT_ID in .env."""
+    await message.answer(
+        f"<code>{message.chat.id}</code>\n\n"
+        "Это значение впиши в <code>ADMIN_CHAT_ID</code> в .env, чтобы бот "
+        "присылал уведомления о протухших куках сюда."
+    )
+
+
+@router.message(Command("status"))
+async def cmd_status(message: types.Message):
+    """Manual health check on demand."""
+    await message.bot.send_chat_action(chat_id=message.chat.id, action="typing")
+    try:
+        results = await health.full_report()
+        await message.answer(health.format_report(results))
+    except Exception as e:
+        logging.error("/status failed: %s", e, exc_info=True)
+        await message.answer("❌ Проверка не удалась, детали в логах.")
