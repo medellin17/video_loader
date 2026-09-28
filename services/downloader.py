@@ -45,6 +45,9 @@ async def download_video(url: str) -> dict:
         "format": "best",
         "external_downloader": None,
         "ignoreerrors": False,
+        # YouTube/Instagram connections drop transiently; retry instead of
+        # showing the user a failure on the first hiccup.
+        "retries": 3,
     }
 
     cookie_file = None

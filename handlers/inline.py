@@ -21,12 +21,7 @@ async def inline_handler(query: types.InlineQuery):
     # Unique ID for the result
     result_id = hashlib.md5(text.encode()).hexdigest()
 
-    # For MVP we will return an Article that sends the link.
-    # The bot must be in the chat to download it if it sees the link.
-    # However, a better UX is "Article" that says "Send to Bot to Download".
-    # But the user wants usage in other chats.
-    # If the bot is added to the group, it will catch the message sent by the user via inline.
-    
+
     results = [
         InlineQueryResultArticle(
             id=result_id,
@@ -35,11 +30,8 @@ async def inline_handler(query: types.InlineQuery):
             input_message_content=InputTextMessageContent(
                 message_text=url
             ),
-            thumbnail_url="https://cdn-icons-png.flaticon.com/512/726/726993.png" # Generic download icon
+            thumbnail_url="https://cdn-icons-png.flaticon.com/512/726/726993.png"
         )
     ]
-    
-    # Advanced: Try to fetch direct URL for Video Result (Slow, might timeout)
-    # Ideally we would need a cache or a fast way. For now, stick to Article.
     
     await query.answer(results, cache_time=1, is_personal=True)

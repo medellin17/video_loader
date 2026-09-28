@@ -8,9 +8,12 @@ __pycache__/
 *.exe
 *.class
 *.out
+
 # Dependencies
 .venv/
 venv/
+# venv311/ and any other numbered venv variant
+venv*/
 node_modules/
 .mypy_cache/
 .pytest_cache/
@@ -18,25 +21,36 @@ dist/
 build/
 target/
 .gradle/
+
 # Logs and temp files
 *.log
 *.tmp
 *.swp
 *.swo
+
 # Environment
 .env
 .env.local
 *.env.*
+
+# Live account sessions - never commit these
+cookies*.txt
+
 # Editors
 .vscode/
 .idea/
+*.swp
+*.swo
+
 # System files
 .DS_Store
 Thumbs.db
+
 # Coverage
 coverage/
 htmlcov/
 .coverage
+
 # Compressed files
 *.zip
 *.gz
@@ -60,30 +74,13 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-# Python
-*.py[cod]
-*$py.class
-.Python
-env/
-develop-eggs/
+# Downloaded media (per-request temp dirs live here)
 downloads/
-eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-venv*/
-*.egg-info/
-.installed.cfg
-*.egg
-# Secrets and Config
-cookies*.txt
-# Documentation & Internal Tasks (as requested)
+
+# Internal task notes
 requirements.md
 implementation_plan.md
 task.md
 variants.md
 debug_*.py
 test.mp4
-# OS
