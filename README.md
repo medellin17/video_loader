@@ -4,49 +4,56 @@
 [![Aiogram](https://img.shields.io/badge/Library-Aiogram_3.x-blue?logo=telegram)](https://github.com/aiogram/aiogram)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-A high-performance Telegram bot capable of downloading high-quality videos from **YouTube (Shorts)**, **Instagram (Reels)**, and **TikTok** (watermark-free). Built with a hybrid multi-stream engine to bypass modern server-side restrictions.
+A high-performance Telegram bot for downloading media from **YouTube (Shorts)**, **Instagram (Reels and photo carousels)**, and **TikTok** (watermark-free). Built with a hybrid multi-stream engine to bypass modern server-side restrictions.
 
 ---
 
 ## ✨ Key Features
 
-- 🔴 **YouTube**: Supports full videos and Shorts in 1080p/4K (via FFmpeg merge).
-- 🟣 **Instagram**: Downloads Reels and videos using session-based authentication.
-- ⚫ **TikTok**: Watermark-free downloads with high-speed extraction.
-- 🚀 **Hybrid Engine**: Custom logic using `aria2c` for YouTube to bypass network throttling.
-- 🛠 **HTML Mode**: Robust message parsing and automatic entity escaping.
-- 👤 **Clean UX**: Minimalist interface with clear video captions and author metadata.
+- 🔴 **YouTube**: Full videos and Shorts up to 4K (via FFmpeg merge), using a 16-connection `aria2c`.
+- 🟣 **Instagram**: Reels and videos via session cookies, plus **photo carousels** sent as a Telegram album.
+- ⚫ **TikTok**: Watermark-free downloads with browser TLS impersonation.
+- 🧹 **Self-cleaning**: Every download goes into its own temp directory, so partial `.part` files can never pile up.
+- 🇷🇺 **Readable errors**: Users get short Russian messages instead of raw yt-dlp tracebacks; full details go to the log.
+- 👤 **Clean UX**: Clear captions with author metadata.
 
 ---
 
 ## 🛠 Tech Stack
 
 - **Core**: [Aiogram 3](https://aiogram.dev/) (Asynchronous Bot API)
-- **Engine**: [yt-dlp](https://github.com/yt-dlp/yt-dlp)
+- **Engine**: [yt-dlp](https://github.com/yt-dlp/yt-dlp) for video, [gallery-dl](https://github.com/mikf/gallery-dl) for photo posts
 - **Downloader**: [aria2c](https://aria2.github.io/) (16-thread multi-connection)
-- **Processor**: [FFmpeg](https://ffmpeg.org/) (for DASH stream merging)
+- **Processor**: [FFmpeg](https://ffmpeg.org/) (DASH stream merging) + Pillow (WebP → JPEG)
+
+> ⚠️ **`curl_cffi` is not optional.** Since yt-dlp 2026.x the TikTok extractor relies on browser TLS impersonation. Without it TikTok serves a ~537 byte block page and every download fails with `Unexpected response from webpage request`.
+
+---
+
+## 🐍 Requirements
+
+- **Python 3.11+** — yt-dlp has dropped 3.10.
+- `ffmpeg` and `aria2` for full quality and fast YouTube downloads.
+
+```bash
+sudo apt update
+sudo apt install -y ffmpeg aria2 python3.11-venv
+```
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Requirements
-Ensure you have the following installed on your Linux server:
+### 1. Installation
 ```bash
-sudo apt update
-sudo apt install -y ffmpeg aria2 python3-pip
-```
-
-### 2. Installation
-```bash
-git clone https://github.com/your-repo/video-loader-bot.git
-cd video-loader-bot
-python3 -m venv venv
+git clone https://github.com/medellin17/video_loader.git
+cd video_loader
+python3.11 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Configuration
+### 2. Configuration
 Create a `.env` file in the root directory:
 ```env
 BOT_TOKEN=your_telegram_bot_token
@@ -54,14 +61,17 @@ COOKIES_YT_PATH=cookies_yt.txt
 COOKIES_INST_PATH=cookies_inst.txt
 ```
 > [!IMPORTANT]
-> To avoid YouTube/Instagram blocks, export your cookies in Netscape format and save them as `cookies_yt.txt` and `cookies_inst.txt`.
+> Instagram requires cookies from a logged-in session. Export them in **Netscape** format
+> (not JSON) and save as `cookies_yt.txt` / `cookies_inst.txt`. At minimum Instagram needs
+> `sessionid`, `ds_user_id` and `csrftoken`. See `walkthrough.md` for the full recipe.
+>
+> Cookie files contain a live account session: keep them at `chmod 600`.
 
-### 4. Running as a Daemon
-Create a systemd service for 24/7 uptime:
+### 3. Running as a Daemon
 ```bash
 # /etc/systemd/system/videoloader.service
 [Unit]
-Description=Telegram Video Loader Bot
+Description=Telegram Media Downloader Bot
 After=network.target
 
 [Service]
@@ -75,6 +85,7 @@ Restart=always
 WantedBy=multi-user.target
 ```
 ```bash
+systemctl daemon-reload
 systemctl enable --now videoloader
 ```
 
@@ -82,11 +93,23 @@ systemctl enable --now videoloader
 
 ## 🏗 Architecture
 
-The project follows a modular structure for easy maintenance:
-- `handlers/`: Command and message logic.
-- `services/`: Core download service with platform-specific optimizations.
-- `utils/`: URL validation and regex utilities.
+The project follows a modular structure:
+
+- `handlers/`: Command, message and inline-query logic. `messages.py` orchestrates a request: try yt-dlp for video, and fall back to a gallery-dl carousel when a post has no video stream.
+- `services/downloader.py`: Video download via yt-dlp, with per-platform options and guaranteed temp cleanup.
+- `services/carousel.py`: Instagram photo posts via gallery-dl, WebP → JPEG conversion, size-capped.
+- `utils/errors.py`: Maps raw yt-dlp errors to short Russian messages for chat.
+- `utils/validators.py`: URL detection and extraction.
+- `tools/cookie_upload.py`: One-shot, token-protected uploader for refreshing Instagram cookies without scp.
 - `config.py`: Environment and path configuration.
+
+### How a photo post is handled
+1. `download_video()` runs yt-dlp, which reports `No video formats found` for a photo-only post.
+2. The handler recognises that specific error and retries with `download_carousel()`.
+3. gallery-dl enumerates the post's media, images are converted to JPEG within Telegram's limits.
+4. The bot sends an album (max 10 items) and deletes the temp directory.
+
+If the carousel also fails, the user gets the plain yt-dlp error message — no crash.
 
 ---
 
@@ -94,4 +117,4 @@ The project follows a modular structure for easy maintenance:
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
-<p align="center">powered by medellin17</p>
+

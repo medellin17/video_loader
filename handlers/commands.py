@@ -8,8 +8,8 @@ async def cmd_start(message: types.Message):
     await message.answer(
         "👋 Привет! Я бот для скачивания видео.\n\n"
         "Я умею скачивать видео с:\n"
-        "🔴 <b>YouTube</b> (+Shorts)\n"
-        "🟣 <b>Instagram</b> (Reels)\n"
+        "🔴 <b>YouTube</b> (Shorts)\n"
+        "🟣 <b>Instagram</b> (Reels и карусели из фото)\n"
         "⚫ <b>TikTok</b> (без водяных знаков)\n\n"
         "Просто пришли мне ссылку на видео, и я отправлю его тебе файлом!"
     )

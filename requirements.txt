@@ -1,3 +1,15 @@
-aiogram>=3.0.0
-yt-dlp>=2023.10.13
+# Floor bumped after the 3.10 -> 3.11 venv migration: 3.31.0 is what is
+# verified working. Pin exactly to avoid surprise minor upgrades.
+aiogram==3.31.0
+# Instagram photo carousels: yt-dlp cannot enumerate photo posts, gallery-dl can.
+gallery-dl==1.32.14
+# WebP -> JPEG conversion for carousel images (Telegram renders WebP poorly).
+Pillow>=12.0.0
+# Floor matters here: TikTok/Instagram break their extractors every few weeks,
+# so do not let this drift far behind. Last verified working: 2026.8.19
+yt-dlp>=2026.8.19
+# REQUIRED since yt-dlp 2026.x: TikTok's extractor relies on browser TLS
+# impersonation. Without it TikTok serves a ~537 byte block page and the
+# download fails with "Unexpected response from webpage request".
+curl_cffi>=0.16.3
 python-dotenv>=1.0.0
