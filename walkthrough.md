@@ -15,13 +15,25 @@ sudo apt update
 sudo apt install -y ffmpeg aria2 python3.11-venv
 ```
 
-> ⚠️ **Проверьте, что установился `curl_cffi`:**
+### Что за что отвечает
+
+| Пакет | Зачем |
+|---|---|
+| `aiogram` | Telegram-клиент, хендлеры |
+| `yt-dlp` | извлечение и скачивание видео |
+| `curl_cffi` | имитация браузерного TLS. **Обязателен:** без него TikTok отдаёт заглушку в 537 байт и падает с `Unexpected response from webpage request` |
+| `gallery-dl` | фото-посты Instagram, которые yt-dlp не видит |
+| `Pillow` | конвертация WebP → JPEG (Telegram отображает WebP плохо) |
+| `httpx` | живая проверка сессии Instagram для мониторинга |
+| `python-dotenv` | чтение `.env` |
+
+> ⚠️ **После установки проверьте критичные пакеты:**
 > ```bash
-> pip show curl_cffi
+> pip show curl_cffi gallery-dl httpx
 > ```
-> Без него TikTok отдаёт заглушку вместо страницы и скачивание падает с
-> `Unexpected response from webpage request`. Он есть в `requirements.txt`,
-> но `pip install` из-за конфликта зависимостей может его пропустить.
+> `curl_cffi` обязателен: новые версии yt-dlp завязаны на имитации TLS, и без
+> неё TikTok перестаёт качаться. `pip install` из-за конфликта зависимостей
+> иногда пропускает пакет — тогда виден симптом «TikTok сломался».
 
 ## 2. Настройка
 Отредактируйте файл `.env`:

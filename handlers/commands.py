@@ -27,7 +27,7 @@ async def cmd_help(message: types.Message):
         "Если видео слишком большое (>50МБ), я предупрежу об этом.\n\n"
         "Поддерживаемые форматы ссылок:\n"
         "- youtube.com/..., youtu.be/...\n"
-        "- instagram.com/reel/..., instagram.com/p/...\n"
+        "- instagram.com/reel/..., instagram.com/p/..., instagram.com/tv/...\n"
         "- tiktok.com/..., vm.tiktok.com/..."
     )
 
