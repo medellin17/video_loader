@@ -29,7 +29,7 @@ async def handle_message(message: types.Message):
         if message.chat.type == "private":
             await message.reply(
                 "⚠️ Ссылка не найдена или не поддерживается.\n"
-                "Пришлите ссылку на YouTube, Instagram или TikTok."
+                "Пришлите ссылку на YouTube, Instagram, TikTok или X (Twitter)."
             )
         return
 

@@ -11,11 +11,13 @@ def is_supported_url(text: str) -> bool:
     youtube_regex = r"(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|shorts\/)?[\w-]+"
     instagram_regex = r"(?:https?:\/\/)?(?:www\.)?instagram\.com\/(?:p|reel|tv)\/[\w-]+"
     tiktok_regex = r"(?:https?:\/\/)?(?:www\.|vm\.|vt\.)?tiktok\.com\/.*"
+    twitter_regex = r"(?:https?:\/\/)?(?:www\.)?(?:twitter\.com|x\.com)\/(?:[\w-]+\/)*status\/\d+"
 
     return bool(
         re.search(youtube_regex, text) or
         re.search(instagram_regex, text) or
-        re.search(tiktok_regex, text)
+        re.search(tiktok_regex, text) or
+        re.search(twitter_regex, text)
     )
 
 def extract_url(text: str) -> str | None:
@@ -29,8 +31,9 @@ def extract_url(text: str) -> str | None:
     youtube_regex = r"(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|shorts\/)?[\w-]+"
     instagram_regex = r"(?:https?:\/\/)?(?:www\.)?instagram\.com\/(?:p|reel|tv)\/[\w-]+"
     tiktok_regex = r"(?:https?:\/\/)?(?:www\.|vm\.|vt\.)?tiktok\.com\/[^\s]+"
+    twitter_regex = r"(?:https?:\/\/)?(?:www\.)?(?:twitter\.com|x\.com)\/(?:[\w-]+\/)*status\/\d+"
 
-    patterns = [youtube_regex, instagram_regex, tiktok_regex]
+    patterns = [youtube_regex, instagram_regex, tiktok_regex, twitter_regex]
     
     for pattern in patterns:
         match = re.search(pattern, text)

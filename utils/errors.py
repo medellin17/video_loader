@@ -51,6 +51,11 @@ _RULES: list[tuple[str, str]] = [
         "Бот качает только видео. Попробуй Reel или ролик.",
     ),
     (
+        "no video could be found in this tweet",
+        "📝 В этом посте нет видео — похоже, это текстовый твит или фото.\n"
+        "Бот качает только видео. Попробуй твит с роликом.",
+    ),
+    (
         "requested format is not available",
         "⚠️ Нужный формат недоступен для этого видео.",
     ),
@@ -138,6 +143,8 @@ def detect_platform(url: str) -> str:
         return "Instagram"
     if "tiktok.com" in lowered:
         return "TikTok"
+    if "twitter.com" in lowered or "x.com" in lowered:
+        return "X (Twitter)"
     if "youtube.com" in lowered or "youtu.be" in lowered:
         return "YouTube"
     return "unknown"

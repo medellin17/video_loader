@@ -4,7 +4,7 @@
 [![Aiogram](https://img.shields.io/badge/Library-Aiogram_3.x-blue?logo=telegram)](https://github.com/aiogram/aiogram)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-A high-performance Telegram bot for downloading media from **YouTube (Shorts)**, **Instagram (Reels and photo carousels)**, and **TikTok** (watermark-free). Built with a hybrid multi-stream engine to bypass modern server-side restrictions.
+A high-performance Telegram bot for downloading media from **YouTube (Shorts)**, **Instagram (Reels and photo carousels)**, **TikTok** (watermark-free), and **X (Twitter)**. Built with a hybrid multi-stream engine to bypass modern server-side restrictions.
 
 ---
 
@@ -13,6 +13,7 @@ A high-performance Telegram bot for downloading media from **YouTube (Shorts)**,
 - 🔴 **YouTube**: Full videos and Shorts up to 4K (via FFmpeg merge), using a 16-connection `aria2c`.
 - 🟣 **Instagram**: Reels and videos via session cookies, plus **photo carousels** sent as a Telegram album.
 - ⚫ **TikTok**: Watermark-free downloads with browser TLS impersonation.
+- ⚪ **X (Twitter)**: Fast native video downloads from public posts without requiring cookies.
 - 🩺 **Health monitoring**: Cookie sessions are probed on a timer; the admin is alerted the moment a session dies, instead of finding out from user complaints.
 - 🧹 **Self-cleaning**: Every download goes into its own temp directory, so partial `.part` files can never pile up.
 - 🇷🇺 **Readable errors**: Users get short Russian messages instead of raw yt-dlp tracebacks; full details go to the log.
@@ -132,7 +133,7 @@ the live probe catches that.
 
 ## 📈 Scaling
 
-Only Instagram needs accounts. TikTok and YouTube work with no session at
+Only Instagram needs accounts. TikTok, YouTube, and X (Twitter) work with no session at
 all — verified, not assumed. See [SCALING.md](SCALING.md) for the measured
 numbers, the account/IP cost model, and where the real ceiling is (it is not
 CPU, and it is not automatable).

@@ -63,7 +63,7 @@ async def download_video(url: str) -> dict:
         })
     elif platform == "Instagram":
         cookie_file = COOKIES_INST_PATH
-    # TikTok needs no cookies and no special client args.
+    # TikTok and X (Twitter) need no cookies and no special client args.
 
     if cookie_file and Path(cookie_file).exists():
         ydl_opts["cookiefile"] = cookie_file

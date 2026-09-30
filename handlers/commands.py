@@ -15,7 +15,8 @@ async def cmd_start(message: types.Message):
         "Я умею скачивать видео с:\n"
         "🔴 <b>YouTube</b> (Shorts)\n"
         "🟣 <b>Instagram</b> (Reels и карусели из фото)\n"
-        "⚫ <b>TikTok</b> (без водяных знаков)\n\n"
+        "⚫ <b>TikTok</b> (без водяных знаков)\n"
+        "⚪ <b>X (Twitter)</b>\n\n"
         "Просто пришли мне ссылку на видео, и я отправлю его тебе файлом!"
     )
 
@@ -28,7 +29,8 @@ async def cmd_help(message: types.Message):
         "Поддерживаемые форматы ссылок:\n"
         "- youtube.com/..., youtu.be/...\n"
         "- instagram.com/reel/..., instagram.com/p/..., instagram.com/tv/...\n"
-        "- tiktok.com/..., vm.tiktok.com/..."
+        "- tiktok.com/..., vm.tiktok.com/...\n"
+        "- x.com/.../status/..., twitter.com/.../status/..."
     )
 
 
