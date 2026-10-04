@@ -11,7 +11,7 @@ A high-performance Telegram bot for downloading media from **YouTube (Shorts)**,
 ## ✨ Key Features
 
 - 🔴 **YouTube**: Full videos and Shorts up to 4K (via FFmpeg merge), using a 16-connection `aria2c`.
-- 🟣 **Instagram**: Reels and videos via session cookies, plus **photo carousels** sent as a Telegram album.
+- 🟣 **Instagram**: Reels and videos, downloaded anonymously from the public page and upgraded to a session when cookies are usable, plus **photo carousels** sent as a Telegram album.
 - ⚫ **TikTok**: Watermark-free downloads with browser TLS impersonation.
 - ⚪ **X (Twitter)**: Fast native video downloads from public posts without requiring cookies.
 - 🩺 **Health monitoring**: Cookie sessions are probed on a timer; the admin is alerted the moment a session dies, instead of finding out from user complaints.
@@ -67,9 +67,18 @@ ADMIN_CHAT_ID=
 HEALTH_CHECK_INTERVAL_HOURS=6
 ```
 > [!IMPORTANT]
-> Instagram requires cookies from a logged-in session. Export them in **Netscape** format
-> (not JSON) and save as `cookies_yt.txt` / `cookies_inst.txt`. At minimum Instagram needs
+> **Instagram videos do not need cookies.** Public posts are scraped from the web page,
+> so the bot works with no session at all. Cookies are still required for **photo
+> carousels** (gallery-dl gets redirected to the login page without them) and they
+> additionally unlock private posts. Export cookies in **Netscape** format (not JSON)
+> and save as `cookies_yt.txt` / `cookies_inst.txt`. At minimum Instagram needs
 > `sessionid`, `ds_user_id` and `csrftoken`. See `walkthrough.md` for the full recipe.
+>
+> Cookies that are present but *unusable* are worse than none: if Instagram puts the
+> session under review, every authenticated call answers HTTP 400
+> `checkpoint_required` and downloads fail until the cookies are re-uploaded. The bot
+> detects this and falls back to anonymous extraction, so videos keep working — see
+> [Instagram checkpoints](#instagram-checkpoints).
 >
 > Cookie files contain a live account session: keep them at `chmod 600`.
 >
@@ -105,9 +114,9 @@ systemctl enable --now videoloader
 The project follows a modular structure:
 
 - `handlers/`: Command, message and inline-query logic. `messages.py` orchestrates a request: try yt-dlp for video, and fall back to a gallery-dl carousel when a post has no video stream.
-- `services/downloader.py`: Video download via yt-dlp, with per-platform options and guaranteed temp cleanup.
+- `services/downloader.py`: Video download via yt-dlp, with per-platform options, an anonymous retry when Instagram refuses the session, and guaranteed temp cleanup.
 - `services/carousel.py`: Instagram photo posts via gallery-dl, WebP → JPEG conversion, size-capped.
-- `services/health.py`: Cookie liveness checks — a live Instagram session returns `200`, a dead one `302`.
+- `services/health.py`: Cookie liveness checks — a live Instagram session returns `200`, a dead one `302`, and `400` + `checkpoint_required` means the session is under review and must be re-uploaded.
 - `services/monitor.py`: Background poller that alerts the admin only on a state *change*, so a dead session produces one message instead of four a day.
 - `utils/errors.py`: Maps raw yt-dlp errors to short Russian messages for chat.
 - `utils/validators.py`: URL detection and extraction.
@@ -129,14 +138,36 @@ and alerts on transition. Note that checking cookie *expiry* on disk is not
 enough — a session revoked before its expiry looks perfectly valid, and only
 the live probe catches that.
 
+### Instagram checkpoints
+Instagram sometimes decides an account must be re-verified and answers every
+authenticated call with HTTP 400 and `{"message": "checkpoint_required"}`. The
+cookies look perfectly valid — `sessionid` was still good for another 361 days
+in the observed case — so nothing on disk reveals the problem.
+
+Two things break, and both are handled:
+
+1. **Downloads.** yt-dlp only reports the bare `HTTP Error 400`, which used to
+   reach users as the generic "could not download" message. The downloader now
+   recognises a session-level refusal, retries once **without cookies**, and
+   remembers that state for 15 minutes so it does not pay a doomed attempt on
+   every request. Public posts extract fine anonymously — measured on the reel
+   that triggered this: 12 formats and a 963 917 byte download logged out, 400
+   with cookies.
+2. **Monitoring.** The probe treated `400` as "unexpected, assume alive", so
+   `/status` stayed green while Instagram was unusable. It now parses the body
+   and reports the checkpoint as broken, which sends exactly one admin alert.
+
+Only **photo carousels** truly need a working session, since gallery-dl is
+redirected to the login page when logged out.
+
 ---
 
 ## 📈 Scaling
 
-Only Instagram needs accounts. TikTok, YouTube, and X (Twitter) work with no session at
-all — verified, not assumed. See [SCALING.md](SCALING.md) for the measured
-numbers, the account/IP cost model, and where the real ceiling is (it is not
-CPU, and it is not automatable).
+Only Instagram needs an account, and only for photo carousels. TikTok, YouTube, and
+X (Twitter) work with no session at all, and Instagram videos do too — verified, not
+assumed. See [SCALING.md](SCALING.md) for the measured numbers, the account/IP cost
+model, and where the real ceiling is (it is not CPU, and it is not automatable).
 
 ---
 
