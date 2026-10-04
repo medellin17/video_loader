@@ -10,6 +10,11 @@ Instagram liveness probe
 GET /api/v1/accounts/edit/web_form_data/ answers:
   200 + JSON  -> session is valid
   302          -> session is dead (redirect to the login page)
+  400 + {"message": "checkpoint_required"}
+               -> cookies are not expired, but Instagram wants a human to
+                  re-verify the account, so the authenticated API is unusable
+                  until fresh cookies are uploaded. Expect this state after
+                  the account is used from an IP that differs from this host.
 
 This was verified against four cookie states: real session, a structurally
 valid but revoked sessionid, csrftoken-only, and an empty jar. Only the real
@@ -173,6 +178,21 @@ async def check_instagram_live() -> CheckResult:
         who = f" ({username})" if username else ""
         return CheckResult(
             True, "Instagram сессия", f"живая{who}, Instagram подтвердил вход"
+        )
+
+    # Instagram answers 400 + {"message": "checkpoint_required"} when it wants
+    # the session re-verified. Cookies can still be unexpired here, so this must
+    # be a distinct state: the API is unusable until a human logs in again.
+    try:
+        message = resp.json().get("message")
+    except Exception:
+        message = None
+    if message == "checkpoint_required":
+        return CheckResult(
+            False, "Instagram сессия",
+            "ЗАБЛОКИРОВА — Instagram требует чекпоинт (проверку входа).\n"
+            f"Куки формально не истекли, но API их не принимает.\n"
+            f"Зайди в аккаунт в браузере и перезапиши куки: {COOKIES_INST_PATH}",
         )
 
     if resp.status_code in (301, 302, 303, 307, 308):

@@ -11,6 +11,21 @@ import logging
 # Checked in order, so put specific patterns before generic ones.
 _RULES: list[tuple[str, str]] = [
     # --- Instagram: the login wall / expired cookies ---
+    # `checkpoint_required` is what Instagram's API answers (HTTP 400) when it
+    # wants the session re-verified. yt-dlp drops the body, so the message
+    # reaches us as "Video info extraction failed: HTTP Error 400".
+    (
+        "video info extraction failed",
+        "🔐 Instagram не отдал видео через API — сессия бота под проверкой.\n"
+        "Администратору нужно заново войти в аккаунт и обновить куки.\n"
+        "Попробуй другой источник.",
+    ),
+    (
+        "checkpoint",
+        "🔐 Instagram требует подтверждение сессии (чекпоинт) — куки бота заблокированы.\n"
+        "Администратору нужно заново войти в аккаунт и обновить куки.\n"
+        "Попробуй другой источник.",
+    ),
     (
         "rate-limit reached or login required",
         "🔐 Instagram требует вход — сессия бота протухла.\n"

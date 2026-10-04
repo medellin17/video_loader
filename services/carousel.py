@@ -61,6 +61,10 @@ def _build_args() -> list[str]:
     ]
     if COOKIES_INST_PATH and Path(COOKIES_INST_PATH).exists():
         args += ["--cookies", str(COOKIES_INST_PATH)]
+        # NOTE: cookies are mandatory here — gallery-dl logged out gets
+        # redirected to the Instagram login page for most posts. That also
+        # means a checkpointed session (see services/health.py) breaks
+        # carousels entirely, unlike videos, which fall back to logged out.
     return args
 
 
